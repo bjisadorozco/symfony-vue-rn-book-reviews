@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[Route('/api/reviews')]
 class ReviewController extends AbstractController
@@ -57,7 +56,7 @@ class ReviewController extends AbstractController
 
         return $this->json([
             'id' => $review->getId(),
-            'created_at' => $review->getCreatedAt()->format('Y-m-d H:i:s')
+            'created_at' => $review->getCreatedAtColombianFormat()
         ], 201);
     }
 }

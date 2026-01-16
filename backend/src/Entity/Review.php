@@ -5,9 +5,7 @@ namespace App\Entity;
 use App\Repository\ReviewRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Book;
 use Symfony\Component\Validator\Constraints as Assert;
-
 
 #[ORM\Entity(repositoryClass: ReviewRepository::class)]
 class Review
@@ -35,7 +33,7 @@ class Review
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable('now', new \DateTimeZone('America/Bogota'));
     }
 
     public function getId(): ?int
@@ -85,5 +83,71 @@ class Review
     {
         $this->book = $book;
         return $this;
+    }
+
+    
+    public function getCreatedAtColombianFormat(): string
+    {
+        if (!$this->createdAt) {
+            return '';
+        }
+        
+        $date = $this->createdAt->setTimezone(new \DateTimeZone('America/Bogota'));
+        
+        return $date->format('d/m/Y H:i:s');
+    }
+
+
+    public function getCreatedAtIsoFormat(): string
+    {
+        if (!$this->createdAt) {
+            return '';
+        }
+
+        $date = $this->createdAt->setTimezone(new \DateTimeZone('America/Bogota'));
+        
+        return $date->format('c');
+    }
+
+    public function getCreatedAtFriendlyFormat(): string
+    {
+        if (!$this->createdAt) {
+            return '';
+        }
+        
+        $date = $this->createdAt->setTimezone(new \DateTimeZone('America/Bogota'));
+        
+        $meses = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+        
+        $dia = $date->format('d');
+        $mes = $meses[(int)$date->format('m')];
+        $anio = $date->format('Y');
+        $hora = $date->format('H:i');
+        
+        return "$dia de $mes de $anio, $hora";
+    }
+
+    public function getCreatedAtDateOnly(): string
+    {
+        if (!$this->createdAt) {
+            return '';
+        }
+        
+        $date = $this->createdAt->setTimezone(new \DateTimeZone('America/Bogota'));
+        return $date->format('d/m/Y');
+    }
+
+    public function getCreatedAtTimeOnly(): string
+    {
+        if (!$this->createdAt) {
+            return '';
+        }
+        
+        $date = $this->createdAt->setTimezone(new \DateTimeZone('America/Bogota'));
+        return $date->format('H:i:s');
     }
 }
