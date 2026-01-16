@@ -1,0 +1,7 @@
+# Vue/Vite
+dist/
+dist-ssr/
+*.local
+
+# Dependencies
+node_modules/

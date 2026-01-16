@@ -31,6 +31,7 @@ class BookRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('b')
             ->select('
+                b.id,
                 b.title,
                 b.author,
                 b.publishedYear AS published_year,

@@ -11,7 +11,7 @@
         <div class="books-grid">
           <div 
             v-for="book in books" 
-            :key="book.title" 
+            :key="book.id" 
             class="book-card"
             :class="getRatingClass(book.average_rating)"
           >
@@ -24,7 +24,7 @@
                 <p class="book-author">{{ book.author }}</p>
                 <div class="book-meta">
                   <span><i class="fas fa-calendar"></i> {{ book.published_year }}</span>
-                  <span><i class="fas fa-hashtag"></i> ID: {{ getBookId(book) }}</span>
+                  <span><i class="fas fa-hashtag"></i> ID: {{ book.id }}</span>
                 </div>
               </div>
             </div>
@@ -44,6 +44,32 @@
             </div>
           </div>
         </div>
+        
+        <!-- Botón de refrescar - NUEVO -->
+        <div class="refresh-section">
+          <button 
+            @click="refreshBooks" 
+            :disabled="loading"
+            class="btn-refresh"
+          >
+            <template v-if="loading">
+              <i class="fas fa-spinner fa-spin"></i> Cargando...
+            </template>
+            <template v-else>
+              <i class="fas fa-sync-alt"></i> Actualizar Lista
+            </template>
+          </button>
+          <div class="stats-info">
+            <span class="stat">
+              <i class="fas fa-book"></i>
+              <strong>{{ books.length }}</strong> libros
+            </span>
+            <span class="stat">
+              <i class="fas fa-star"></i>
+              <strong>{{ averageRatingOverall }}</strong> promedio
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Columna derecha: Formulario de reseña -->
@@ -58,10 +84,10 @@
             <div class="book-options">
               <div 
                 v-for="book in books" 
-                :key="book.title"
+                :key="book.id"
                 class="book-option"
-                :class="{ 'selected': newReview.bookId === getBookId(book) }"
-                @click="newReview.bookId = getBookId(book)"
+                :class="{ 'selected': newReview.bookId === book.id }"
+                @click="newReview.bookId = book.id"
               >
                 <div class="option-icon">
                   <i class="fas fa-book"></i>
@@ -156,6 +182,11 @@ const fetchBooks = async () => {
   try {
     const response = await axios.get('/api/books')
     books.value = response.data
+    
+    // Si hay libros, seleccionar el primero automáticamente
+    if (books.value.length > 0 && !newReview.value.bookId) {
+      newReview.value.bookId = books.value[0].id
+    }
   } catch (err) {
     error.value = 'Error al cargar libros'
     console.error(err)
@@ -164,19 +195,33 @@ const fetchBooks = async () => {
   }
 }
 
+// Método para refrescar libros
+const refreshBooks = async () => {
+  await fetchBooks()
+  showToastMessage('Lista actualizada', 'success', 'fas fa-check-circle')
+}
+
 const submitReview = async () => {
   submitting.value = true
   
   try {
+    // Usar el ID real del backend directamente
     await axios.post('/api/reviews', {
-      book_id: parseInt(newReview.value.bookId),
+      book_id: newReview.value.bookId, // Ya viene como número del backend
       rating: parseInt(newReview.value.rating),
       comment: newReview.value.comment
     })
     
     showToastMessage('Reseña agregada', 'success', 'fas fa-check-circle')
     newReview.value = { bookId: '', rating: '', comment: '' }
-    setTimeout(fetchBooks, 500)
+    
+    // Si hay libros, seleccionar el primero después de enviar
+    if (books.value.length > 0) {
+      newReview.value.bookId = books.value[0].id
+    }
+    
+    // Actualizar automáticamente la lista después de añadir reseña
+    setTimeout(refreshBooks, 500)
     
   } catch (err) {
     showToastMessage('❌ Error: ' + (err.response?.data?.error || err.message), 'error', 'fas fa-exclamation-circle')
@@ -200,15 +245,6 @@ const formatRating = (rating) => {
 
 const getStarCount = (rating) => {
   return Math.floor(parseFloat(rating) || 0)
-}
-
-const getBookId = (book) => {
-  const bookIds = {
-    'El Arte de Programar': 4,
-    'Clean Code': 5,
-    'Refactoring': 6
-  }
-  return bookIds[book.title] || 'N/A'
 }
 
 const getRatingClass = (rating) => {
@@ -246,86 +282,13 @@ onMounted(() => {
   flex-direction: column;
 }
 
-/* Controles superiores */
-.dashboard-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.controls-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.btn-refresh {
-  background: #6366f1;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  background: #4f46e5;
-  transform: translateY(-1px);
-}
-
-.btn-refresh:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.stats {
-  display: flex;
-  gap: 20px;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.stat i {
-  color: #6366f1;
-}
-
-.stat strong {
-  color: #1e293b;
-}
-
-.error-message {
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* Grid principal - Todo en una vista */
 .main-grid {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  min-height: 0; /* Importante para que no haga overflow */
+  min-height: 0;
 }
 
 .column {
@@ -355,6 +318,8 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .books-grid {
@@ -364,6 +329,68 @@ onMounted(() => {
   flex-direction: column;
   gap: 12px;
   padding-right: 8px;
+  margin-bottom: 16px;
+}
+
+/* Sección de refrescar - NUEVO */
+.refresh-section {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-refresh {
+  background: #6366f1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stats-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.stat i {
+  color: #6366f1;
+  font-size: 12px;
+}
+
+.stat strong {
+  color: #1e293b;
+  font-weight: 600;
 }
 
 /* Tarjeta de libro compacta */

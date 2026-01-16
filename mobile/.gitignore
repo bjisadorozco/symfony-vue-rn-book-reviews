@@ -1,0 +1,14 @@
+# React Native/Expo
+.expo/
+.expo-shared/
+
+# Android/iOS
+android/.gradle/
+android/app/build/
+android/build/
+ios/build/
+ios/Pods/
+*.ipa
+
+# Dependencies
+node_modules/
