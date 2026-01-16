@@ -4,4 +4,4 @@ dist-ssr/
 *.local
 
 # Dependencies
-node_modules/
+node_modules/node_modules/

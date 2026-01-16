@@ -22,4 +22,4 @@ Thumbs.db
 
 # Logs
 logs/
-*.log
+*.logfrontend/node_modules/
